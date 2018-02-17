@@ -1,0 +1,28 @@
+oracle('mode')= 'regression'
+
+source:
+    bind = 'dataSum.csv' ;
+    input:
+        x ~ from 'Avg' -> flat: [1] -> FlatDataGenerator: [] ;
+    output:
+        y ~ from "Volatility" -> flat: [1] -> FlatDataGenerator: [] ;
+    params:
+        validation_split = 0.2 ;
+
+architecture:
+    input:
+        x ~  flat: [1];
+    output:
+        y ~ flat: [1];
+
+    x -> auto -> y ;
+
+train:
+    compile:
+        optimizer = auto,
+        loss = auto,
+        metrics = ['accuracy'] ;
+    run:
+        epochs = 4 ;
+
+    dashboard: ;
