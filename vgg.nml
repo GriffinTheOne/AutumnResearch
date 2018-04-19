@@ -1,0 +1,85 @@
+
+oracle("mode") = "classification"
+
+source:
+        bind = "/DM-Dash/vggnet/data.csv"
+        input:
+                x ~ from "Image"
+                  -> image: [shape = [224, 224], channels=3]
+                  -> ImageDataGenerator[rescale=???];  //try random numbers at first
+        output:
+                y ~ from "Label"
+                  -> flat: [2] // dog and cat at first(1000 classes in total)
+                  -> flatDataGenerator: [];
+        params:
+                validation_split = 0.037;
+
+architecture:
+        input: x ~ image: [shape = [224, 224], channels=3]
+        output: y ~ flat: [2];
+
+        // VGG 16 architecture with 3*3 filters
+        x -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [64, [3,3]]
+          -> Activation: ['relu']
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [64, [3,3]]
+          -> Activation: ['relu']
+          -> MaxPooling2D: [pool_size=[2,2], stride=[2,2]]
+
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [128, [3,3]]
+          -> Activation: ['relu']
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [128, [3,3]]
+          -> Activation: ['relu']
+          -> MaxPooling2D: [pool_size=[2,2], stride=[2,2]]
+
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [256, [3,3]]
+          -> Activation: ['relu']
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [256, [3,3]]
+          -> Activation: ['relu']
+          -> Conv2D: [256, [3,3]]
+          -> Activation: ['relu']
+          -> MaxPooling2D: [pool_size=[2,2], stride=[2,2]]
+
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [512, [3,3]]
+          -> Activation: ['relu']
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [512, [3,3]]
+          -> Activation: ['relu']
+          -> Conv2D: [512, [3,3]]
+          -> Activation: ['relu']
+          -> MaxPooling2D: [pool_size=[2,2], stride=[2,2]]
+
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [512, [3,3]]
+          -> Activation: ['relu']
+          -> ZeroPadding2D[[1,1]]
+          -> Conv2D: [512, [3,3]]
+          -> Activation: ['relu']
+          -> Conv2D: [512, [3,3]]
+          -> Activation: ['relu']
+          -> MaxPooling2D: [pool_size=[2,2], stride=[2,2]]
+
+          -> Flatten: []
+          -> Dense: [4096]
+          -> Activation: ['relu']
+          -> Dropout: [0.5]
+          -> Dense: [4096]
+          -> Activation: ['relu']
+          -> Dropout: [0.5]
+          -> Dense: [1000]
+          -> Activation: ['softmax']
+          -> y;
+
+train:
+        compile:
+                optimizer = 'sgd',
+                loss = 'categorical_binary', // change later
+                metrics = ['accuracy'];
+        run:
+                epochs = 4 ;
